@@ -9,199 +9,569 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #000; color: white; height: 100dvh; overflow: hidden; }
-        #videoFeed { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #000; 
+            color: white; 
+            height: 100dvh; 
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #videoFeed { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            z-index: 10;
+            transform: scaleX(1);
+        }
         .viewfinder-mask {
-            position: fixed; inset: 0; z-index: 20;
-            background: rgba(0,0,0,0.7);
-            clip-path: polygon(0% 0%, 0% 100%, 8% 100%, 8% 12%, 92% 12%, 92% 80%, 8% 80%, 8% 100%, 100% 100%, 100% 0%);
+            position: fixed; 
+            inset: 0; 
+            z-index: 20;
+            background: rgba(0,0,0,0.8);
+            clip-path: polygon(
+                0% 0%, 0% 100%, 
+                8% 100%, 8% 15%, 
+                92% 15%, 92% 82%, 
+                8% 82%, 8% 100%, 
+                100% 100%, 100% 0%
+            );
         }
         .scanner-line {
-            position: absolute; top: 12%; left: 8%; width: 84%; height: 3px;
-            background: #22c55e; box-shadow: 0 0 15px #22c55e;
-            z-index: 30; animation: scanLoop 3s infinite ease-in-out;
+            position: absolute; 
+            top: 15%; 
+            left: 8%; 
+            width: 84%; 
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #22c55e, transparent);
+            z-index: 30; 
+            animation: scanLoop 2s infinite linear;
+            filter: drop-shadow(0 0 8px #22c55e);
         }
-        @keyframes scanLoop { 0%, 100% { top: 12%; opacity: 0.5; } 50% { top: 80%; opacity: 1; } }
+        @keyframes scanLoop { 
+            0% { top: 15%; }
+            100% { top: 82%; }
+        }
+        .flash-active {
+            background: linear-gradient(45deg, #fbbf24, #f59e0b) !important;
+            color: white !important;
+        }
+        .camera-switch {
+            transition: transform 0.3s ease;
+        }
+        .camera-switch:active {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="flex flex-col">
 
     <video id="videoFeed" autoplay playsinline muted></video>
     <canvas id="hiddenCanvas" class="hidden"></canvas>
-    
+    <canvas id="preprocessCanvas" class="hidden"></canvas>
+
     <div class="viewfinder-mask"></div>
     <div class="scanner-line"></div>
 
     <header class="fixed top-0 w-full p-6 flex justify-between items-center z-50">
-        <a href="index.html" class="bg-white p-3 rounded-2xl border-2 border-black text-black shadow-[4px_4px_0px_#000] active:scale-90 transition-all">
+        <a href="index.html" class="bg-white p-3 rounded-2xl border-2 border-black text-black shadow-[4px_4px_0px_#000] active:scale-90 transition-all duration-200">
             <i data-lucide="arrow-left"></i>
         </a>
-        <button id="flashToggle" class="bg-black/50 backdrop-blur-md p-3 rounded-2xl border-2 border-white/20 text-yellow-400 active:scale-90 shadow-xl">
+        <button id="flashToggle" class="bg-black/50 backdrop-blur-md p-3 rounded-2xl border-2 border-white/20 text-yellow-300 active:scale-90 shadow-xl transition-all duration-200">
             <i data-lucide="zap-off" id="flashIcon"></i>
         </button>
     </header>
 
-    <section class="fixed bottom-0 w-full bg-black/90 backdrop-blur-xl p-8 pb-10 flex justify-around items-center z-50 border-t-4 border-white/10 rounded-t-[3rem]">
-        <label class="flex flex-col items-center gap-2 cursor-pointer text-white/50">
+    <section class="fixed bottom-0 w-full bg-gradient-to-t from-black via-black/95 to-transparent backdrop-blur-xl p-8 pb-12 flex justify-around items-center z-50 border-t-4 border-white/10 rounded-t-[3rem]">
+        <label class="flex flex-col items-center gap-2 cursor-pointer text-white/50 active:scale-95 transition-transform duration-200">
             <input type="file" id="galleryInput" accept="image/*" class="hidden">
-            <div class="p-4 bg-white/5 rounded-full border border-white/10"><i data-lucide="image"></i></div>
+            <div class="p-4 bg-white/10 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
+                <i data-lucide="image"></i>
+            </div>
             <span class="text-[10px] font-bold uppercase tracking-widest">Galeri</span>
         </label>
 
-        <button onclick="captureImage()" class="relative active:scale-90 transition-transform">
-            <div class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center p-1 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+        <button onclick="captureImage()" class="relative active:scale-90 transition-transform duration-200">
+            <div class="w-24 h-24 rounded-full border-4 border-white flex items-center justify-center p-2 shadow-[0_0_30px_rgba(255,255,255,0.4)]">
                 <div class="w-full h-full rounded-full bg-white border-4 border-black"></div>
             </div>
+            <div class="absolute inset-0 rounded-full animate-ping bg-white/20 -z-10"></div>
         </button>
 
-        <button onclick="switchCamera()" class="flex flex-col items-center gap-2 text-white/50">
-            <div class="p-4 bg-white/5 rounded-full border border-white/10"><i data-lucide="refresh-cw"></i></div>
+        <button onclick="switchCamera()" class="flex flex-col items-center gap-2 text-white/50 camera-switch active:scale-95 transition-transform duration-200">
+            <div class="p-4 bg-white/10 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
+                <i data-lucide="refresh-cw"></i>
+            </div>
             <span class="text-[10px] font-bold uppercase tracking-widest">Putar</span>
         </button>
     </section>
 
+    <!-- AI Processing Modal -->
     <div id="aiModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[100] hidden items-center justify-center p-6 overflow-y-auto">
         <div class="bg-white text-black w-full max-w-sm rounded-[2.5rem] p-8 border-4 border-black shadow-[10px_10px_0px_#6366f1] transform transition-all">
-            
-            <div id="loadingUI" class="flex flex-col items-center py-8">
-                <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                <h3 class="mt-6 font-black uppercase text-xl italic tracking-tighter">AI Sedang Membaca...</h3>
-                <p class="text-[10px] font-bold text-gray-400 mt-2 uppercase">Mencocokkan pola nota</p>
+
+            <div id="loadingUI" class="flex flex-col items-center py-10 space-y-6">
+                <div class="relative">
+                    <div class="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 w-20 h-20 border-4 border-purple-600 border-l-transparent rounded-full animate-spin animation-delay-300"></div>
+                </div>
+                <div class="text-center">
+                    <h3 class="font-black uppercase text-xl italic tracking-tighter bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Sedang Membaca</h3>
+                    <p class="text-[11px] font-bold text-gray-400 mt-3 uppercase tracking-wider">Menganalisis detail nota...</p>
+                    <div class="mt-4 w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
             </div>
 
             <div id="resultUI" class="hidden space-y-4">
-                <div class="text-center mb-4">
-                    <span class="bg-black text-white text-[10px] font-black px-4 py-1 rounded-full uppercase italic shadow-[3px_3px_0px_#22c55e]">Nota Terdeteksi!</span>
+                <div class="text-center mb-6">
+                    <span class="bg-black text-white text-xs font-black px-5 py-2 rounded-full uppercase italic shadow-[3px_3px_0px_#22c55e] inline-flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        Nota Terdeteksi!
+                    </span>
                 </div>
 
-                <div class="space-y-3">
-                    <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
-                        <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Nama Toko</p>
-                        <p id="resStore" class="font-extrabold text-lg uppercase italic leading-none">---</p>
+                <div class="space-y-4">
+                    <div class="p-5 bg-gray-50 rounded-2xl border-2 border-black">
+                        <p class="text-xs font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
+                            <i data-lucide="store" class="w-3 h-3"></i>
+                            Nama Toko
+                        </p>
+                        <p id="resStore" class="font-extrabold text-lg uppercase italic leading-tight break-words">---</p>
                     </div>
 
-                    <div class="p-4 bg-yellow-100 rounded-2xl border-2 border-black shadow-[4px_4px_0px_#000]">
-                        <p class="text-[9px] font-black uppercase text-yellow-700 mb-1">Total Pembayaran (Rp)</p>
-                        <p id="resAmount" class="text-3xl font-black italic tracking-tighter">0</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="p-3 bg-gray-50 rounded-2xl border-2 border-black">
-                            <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Tanggal</p>
-                            <p id="resDate" class="font-bold text-xs leading-none">--/--/--</p>
+                    <div class="p-5 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-2xl border-2 border-black shadow-[4px_4px_0px_#000]">
+                        <p class="text-xs font-black uppercase text-yellow-700 mb-2 flex items-center gap-2">
+                            <i data-lucide="receipt" class="w-3 h-3"></i>
+                            Total Pembayaran
+                        </p>
+                        <div class="flex items-baseline">
+                            <span class="text-sm font-black text-yellow-800">Rp</span>
+                            <p id="resAmount" class="text-3xl font-black italic tracking-tighter ml-1">0</p>
                         </div>
-                        <div class="p-3 bg-gray-50 rounded-2xl border-2 border-black text-right">
-                            <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Metode</p>
-                            <p id="resMethod" class="font-bold text-xs leading-none">CASH</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
+                            <p class="text-xs font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                Tanggal
+                            </p>
+                            <p id="resDate" class="font-bold text-sm leading-none">--/--/--</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
+                            <p class="text-xs font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
+                                <i data-lucide="credit-card" class="w-3 h-3"></i>
+                                Metode
+                            </p>
+                            <p id="resMethod" class="font-bold text-sm leading-none">CASH</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-6 space-y-3">
-                    <button onclick="window.location.href='index.html'" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_#000] active:translate-y-1 transition-all">Input Keuangan</button>
-                    <button onclick="location.reload()" class="w-full py-2 text-[10px] font-black uppercase text-gray-400 underline">Coba Lagi</button>
+                <div class="pt-8 space-y-3">
+                    <button onclick="window.location.href='index.html'" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_#000] active:translate-y-1 active:shadow-none transition-all duration-200 hover:opacity-90">
+                        Input Keuangan
+                    </button>
+                    <button onclick="location.reload()" class="w-full py-3 text-xs font-black uppercase text-gray-500 hover:text-black transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        Scan Lagi
+                    </button>
                 </div>
+            </div>
+
+            <div id="errorUI" class="hidden flex-col items-center py-10 space-y-6">
+                <div class="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
+                    <i data-lucide="alert-circle" class="w-10 h-10 text-red-600"></i>
+                </div>
+                <div class="text-center">
+                    <h3 class="font-black uppercase text-xl text-red-600">Gagal Membaca</h3>
+                    <p class="text-sm text-gray-600 mt-2">Pastikan foto terang dan posisi nota tepat</p>
+                </div>
+                <button onclick="location.reload()" class="w-full py-4 bg-black text-white rounded-2xl font-bold uppercase">
+                    Coba Lagi
+                </button>
             </div>
         </div>
     </div>
 
     <script>
+        // Initialize icons
         lucide.createIcons();
+        
+        // DOM Elements
         const video = document.getElementById('videoFeed');
         const canvas = document.getElementById('hiddenCanvas');
-        let currentStream;
+        const preprocessCanvas = document.getElementById('preprocessCanvas');
+        const progressBar = document.getElementById('progressBar');
+        
+        // State variables
+        let currentStream = null;
         let isFlashOn = false;
+        let isFrontCamera = false;
+        let currentFacingMode = 'environment';
 
-        async function initCamera(mode = 'environment') {
-            if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+        // Initialize camera
+        async function initCamera(facingMode = 'environment') {
             try {
-                currentStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: mode, focusMode: 'continuous', width: { ideal: 1280 }, height: { ideal: 720 } } 
-                });
-                video.srcObject = currentStream;
-            } catch (e) { alert("Izin kamera diperlukan!"); }
-        }
-
-        // Fitur Senter (Flash)
-        document.getElementById('flashToggle').onclick = async () => {
-            const track = currentStream.getVideoTracks()[0];
-            const caps = track.getCapabilities();
-            if (caps.torch) {
-                isFlashOn = !isFlashOn;
-                await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
-                document.getElementById('flashIcon').setAttribute('data-lucide', isFlashOn ? 'zap' : 'zap-off');
-                lucide.createIcons();
-            } else { alert("Perangkat tidak mendukung senter."); }
-        };
-
-        // --- CORE AI LOGIC ---
-        async function runOcr(imageSource) {
-            document.getElementById('aiModal').classList.replace('hidden', 'flex');
-            
-            try {
-                // Pre-processing Tesseract untuk Nota Indonesia
-                const worker = await Tesseract.createWorker('ind');
-                const { data: { text } } = await worker.recognize(imageSource);
-                console.log("Raw OCR:", text); // Debugging
-
-                const lines = text.split('\n').map(l => l.trim().toUpperCase());
-                
-                // 1. Ekstrak Nama Toko (Biasanya baris paling atas atau yang mengandung PT./TOKO)
-                let store = lines.find(l => l.includes('PT.') || l.includes('TOKO') || l.length > 5) || "CENTRO PALOPO";
-
-                // 2. Ekstrak Total Belanja (Mencari nominal setelah kata 'TOTAL', 'BAYAR', atau 'TRANSAKSI')
-                // Berdasarkan nota kamu: "TRANSAKSI : 69.000,00" atau "TOT. BAYAR : 69.000,00"
-                const amountMatch = text.match(/(TRANSAKSI|BAYAR|TOTAL|TOT\.\s?BAYAR)\s?[:=]\s?([\d.,]+)/i);
-                let amount = "0";
-                if (amountMatch) {
-                    amount = amountMatch[2].split(',')[0].replace(/[^0-9]/g, '');
-                } else {
-                    // Fallback: cari angka ribuan terbesar yang berakhiran ,00
-                    const allNumbers = text.match(/\d{1,3}(\.\d{3})+(,\d{2})?/g);
-                    if (allNumbers) {
-                        const cleanNumbers = allNumbers.map(n => parseInt(n.split(',')[0].replace(/\./g, '')));
-                        amount = Math.max(...cleanNumbers).toString();
-                    }
+                // Stop existing stream
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
                 }
 
-                // 3. Ekstrak Tanggal (Pola: DD/MM/YYYY)
-                const dateMatch = text.match(/\d{2}\/\d{2}\/\d{4}/);
-                let date = dateMatch ? dateMatch[0] : new Date().toLocaleDateString('id-ID');
+                // Get camera with better constraints for receipt scanning
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
+                    }
+                };
 
-                // 4. Ekstrak Metode (CASH / TRANSFER / DEBIT)
-                const method = text.includes('TRANSFER') ? 'TRANSFER BANK' : (text.includes('CASH') ? 'CASH' : 'CASH');
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Apply to video element
+                video.srcObject = currentStream;
+                
+                // Fix for front camera mirroring
+                if (facingMode === 'user') {
+                    video.style.transform = 'scaleX(-1)';
+                } else {
+                    video.style.transform = 'scaleX(1)';
+                }
+                
+                await video.play();
+                
+                // Initialize flash capability if available
+                setupFlashCapability();
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                alert("Izin kamera diperlukan untuk menggunakan fitur scan!");
+            }
+        }
 
-                // Tampilkan Hasil
+        // Switch between front and back camera
+        async function switchCamera() {
+            if (navigator.vibrate) navigator.vibrate(30);
+            
+            isFrontCamera = !isFrontCamera;
+            currentFacingMode = isFrontCamera ? 'user' : 'environment';
+            
+            await initCamera(currentFacingMode);
+        }
+
+        // Flash functionality
+        async function setupFlashCapability() {
+            const flashButton = document.getElementById('flashToggle');
+            const flashIcon = document.getElementById('flashIcon');
+            
+            if (!currentStream) return;
+            
+            const track = currentStream.getVideoTracks()[0];
+            if (!track) return;
+            
+            try {
+                const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+                
+                if (capabilities.torch) {
+                    flashButton.disabled = false;
+                    
+                    flashButton.onclick = async () => {
+                        try {
+                            isFlashOn = !isFlashOn;
+                            await track.applyConstraints({
+                                advanced: [{ torch: isFlashOn }]
+                            });
+                            
+                            flashIcon.setAttribute('data-lucide', isFlashOn ? 'zap' : 'zap-off');
+                            flashButton.classList.toggle('flash-active', isFlashOn);
+                            lucide.createIcons();
+                            
+                            if (navigator.vibrate) navigator.vibrate(30);
+                        } catch (flashError) {
+                            console.error('Flash error:', flashError);
+                        }
+                    };
+                } else {
+                    flashButton.disabled = true;
+                    flashButton.title = "Flash tidak didukung";
+                }
+            } catch (error) {
+                console.error('Flash setup error:', error);
+            }
+        }
+
+        // Image preprocessing for better OCR
+        function preprocessImage(imageData) {
+            const ctx = preprocessCanvas.getContext('2d');
+            const img = new Image();
+            
+            return new Promise((resolve) => {
+                img.onload = () => {
+                    // Set canvas size
+                    preprocessCanvas.width = img.width;
+                    preprocessCanvas.height = img.height;
+                    
+                    // Apply preprocessing
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Get image data
+                    let imageData = ctx.getImageData(0, 0, preprocessCanvas.width, preprocessCanvas.height);
+                    let data = imageData.data;
+                    
+                    // Enhance contrast and convert to grayscale
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        
+                        // Convert to grayscale with weighted average
+                        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                        
+                        // Increase contrast
+                        const contrast = 1.5;
+                        const adjustedGray = ((gray - 128) * contrast) + 128;
+                        
+                        // Threshold for binarization
+                        const threshold = 150;
+                        const finalValue = adjustedGray > threshold ? 255 : 0;
+                        
+                        data[i] = finalValue;     // R
+                        data[i + 1] = finalValue; // G
+                        data[i + 2] = finalValue; // B
+                        // Alpha remains unchanged
+                    }
+                    
+                    ctx.putImageData(imageData, 0, 0);
+                    resolve(preprocessCanvas.toDataURL('image/jpeg', 0.9));
+                };
+                img.src = imageData;
+            });
+        }
+
+        // Enhanced OCR processing for Indonesian receipts
+        async function runOcr(imageSource) {
+            try {
+                // Show modal with loading state
+                const modal = document.getElementById('aiModal');
+                modal.classList.replace('hidden', 'flex');
+                document.getElementById('loadingUI').classList.remove('hidden');
+                document.getElementById('resultUI').classList.add('hidden');
+                document.getElementById('errorUI').classList.add('hidden');
+                
+                progressBar.style.width = '20%';
+                
+                // Preprocess image
+                const processedImage = await preprocessImage(imageSource);
+                progressBar.style.width = '40%';
+                
+                // Initialize Tesseract with Indonesian language
+                const worker = await Tesseract.createWorker('ind', 1, {
+                    logger: (m) => {
+                        if (m.status === 'recognizing text') {
+                            progressBar.style.width = `${40 + (m.progress * 40)}%`;
+                        }
+                    }
+                });
+                
+                // Configure Tesseract for receipt scanning
+                await worker.setParameters({
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-/:$abcdefghijklmnopqrstuvwxyz ',
+                    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+                    preserve_interword_spaces: '1',
+                    textord_min_linesize: '2.5'
+                });
+                
+                progressBar.style.width = '60%';
+                
+                // Perform OCR
+                const { data: { text } } = await worker.recognize(processedImage);
+                console.log("OCR Result:", text);
+                
+                progressBar.style.width = '90%';
+                
+                // Extract information from receipt
+                const extractedData = extractReceiptData(text);
+                
+                // Update UI with results
                 document.getElementById('loadingUI').classList.add('hidden');
                 document.getElementById('resultUI').classList.remove('hidden');
                 
-                document.getElementById('resStore').innerText = store;
-                document.getElementById('resAmount').innerText = parseInt(amount).toLocaleString('id-ID');
-                document.getElementById('resDate').innerText = date;
-                document.getElementById('resMethod').innerText = method;
-
+                document.getElementById('resStore').innerText = extractedData.store;
+                document.getElementById('resAmount').innerText = extractedData.amount.toLocaleString('id-ID');
+                document.getElementById('resDate').innerText = extractedData.date;
+                document.getElementById('resMethod').innerText = extractedData.method;
+                
+                progressBar.style.width = '100%';
+                
                 await worker.terminate();
-            } catch (e) { alert("AI Gagal membaca. Pastikan foto terang & tegak."); location.reload(); }
+                
+            } catch (error) {
+                console.error('OCR Error:', error);
+                
+                document.getElementById('loadingUI').classList.add('hidden');
+                document.getElementById('errorUI').classList.remove('hidden');
+            }
         }
 
+        // Enhanced data extraction for Indonesian receipts
+        function extractReceiptData(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const textUpper = text.toUpperCase();
+            
+            // Store name extraction
+            let store = "TOKO";
+            const storeKeywords = ['TOKO', 'PT', 'CV', 'UD', 'MART', 'SUPERMARKET', 'MINIMARKET', 'SWALAYAN'];
+            
+            for (let i = 0; i < Math.min(5, lines.length); i++) {
+                const line = lines[i];
+                if (storeKeywords.some(keyword => line.includes(keyword)) && line.length > 3) {
+                    store = line;
+                    break;
+                }
+            }
+            
+            // Amount extraction with multiple patterns
+            let amount = 0;
+            const amountPatterns = [
+                /(?:TOTAL|BAYAR|TRANSAKSI|TOT\.?\s?BAYAR|RP\.?|HARGA)\s*[:=]?\s*([\d.,]+)/gi,
+                /([\d.,]+)\s*(?:TOTAL|BAYAR)/gi,
+                /RP\.?\s*([\d.,]+)/gi
+            ];
+            
+            for (const pattern of amountPatterns) {
+                const matches = [...text.matchAll(pattern)];
+                for (const match of matches) {
+                    const amountStr = match[1].replace(/[^\d]/g, '');
+                    const amountNum = parseInt(amountStr);
+                    if (amountNum > amount && amountNum < 100000000) { // Reasonable limit
+                        amount = amountNum;
+                    }
+                }
+            }
+            
+            // Fallback: find largest number in the text
+            if (amount === 0) {
+                const allNumbers = text.match(/\d{1,3}(?:\.\d{3})*(?:,\d{2})?/g) || [];
+                const numbers = allNumbers.map(n => parseInt(n.replace(/[^\d]/g, '')));
+                if (numbers.length > 0) {
+                    amount = Math.max(...numbers.filter(n => n > 1000 && n < 100000000));
+                }
+            }
+            
+            // Date extraction
+            let date = new Date().toLocaleDateString('id-ID');
+            const datePatterns = [
+                /\d{2}\/\d{2}\/\d{4}/,
+                /\d{2}-\d{2}-\d{4}/,
+                /\d{2}\s+[A-Z]{3}\s+\d{4}/,
+                /(?:TANGGAL|TGL)[:\s]+(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i
+            ];
+            
+            for (const pattern of datePatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    date = match[0];
+                    break;
+                }
+            }
+            
+            // Payment method extraction
+            let method = "CASH";
+            if (textUpper.includes('TRANSFER') || textUpper.includes('BANK')) {
+                method = "TRANSFER";
+            } else if (textUpper.includes('DEBIT') || textUpper.includes('KARTU')) {
+                method = "DEBIT";
+            } else if (textUpper.includes('KREDIT') || textUpper.includes('CREDIT')) {
+                method = "KREDIT";
+            } else if (textUpper.includes('QRIS') || textUpper.includes('QR')) {
+                method = "QRIS";
+            }
+            
+            return {
+                store: store.substring(0, 50),
+                amount: amount || 0,
+                date: date,
+                method: method
+            };
+        }
+
+        // Capture image from camera
         function captureImage() {
+            if (!video.srcObject) {
+                alert("Kamera belum siap!");
+                return;
+            }
+            
             if (navigator.vibrate) navigator.vibrate(50);
+            
+            // Set canvas dimensions
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            
             const ctx = canvas.getContext('2d');
-            // Image Processing sederhana agar teks lebih tajam (High Contrast)
-            ctx.filter = 'contrast(1.4) grayscale(1)';
-            ctx.drawImage(video, 0, 0);
+            
+            // Draw video frame to canvas
+            if (isFrontCamera) {
+                // Flip horizontally for front camera
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Reset transformation
+            if (isFrontCamera) {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+            }
+            
+            // Start OCR processing
             runOcr(canvas.toDataURL('image/jpeg', 0.9));
         }
 
+        // Handle gallery image selection
         document.getElementById('galleryInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
             const reader = new FileReader();
-            reader.onload = (f) => runOcr(f.target.result);
-            reader.readAsDataURL(e.target.files[0]);
+            reader.onload = (event) => {
+                runOcr(event.target.result);
+            };
+            reader.readAsDataURL(file);
+            
+            // Reset file input
+            e.target.value = '';
         };
 
-        initCamera();
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCamera();
+            
+            // Add touch feedback for buttons
+            document.querySelectorAll('button, label[for]').forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.classList.add('active:scale-95');
+                });
+                element.addEventListener('touchend', function() {
+                    this.classList.remove('active:scale-95');
+                });
+            });
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+        });
+
     </script>
 </body>
 </html>
