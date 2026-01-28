@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keuangku - Smart Finance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
+        .genz-card { border: 3px solid #000; box-shadow: 6px 6px 0px #000; transition: all 0.2s; }
+        .genz-card:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0px #000; }
+        .gradient-bg { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+        .bottom-nav { border-top: 3px solid #000; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <header class="p-6 flex justify-between items-center bg-white">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight">KEUANG<span class="text-indigo-600">KU.</span></h1>
+            <p class="text-gray-500 text-sm font-semibold">Halo, Bos UMKM! 👋</p>
+        </div>
+        <div class="w-12 h-12 bg-yellow-300 rounded-full border-2 border-black flex items-center justify-center overflow-hidden">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="avatar">
+        </div>
+    </header>
+
+    <main class="px-6">
+        <div class="gradient-bg p-6 rounded-[2rem] text-white border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] mb-8">
+            <p class="text-sm opacity-90 font-semibold mb-1">Total Saldo Supply</p>
+            <h2 class="text-3xl font-extrabold mb-4">Rp 12.450.000</h2>
+            <div class="flex gap-3">
+                <div class="bg-white/20 backdrop-blur-md p-2 px-4 rounded-full text-xs border border-white/30 italic">
+                    🔥 12 Nota di-scan minggu ini
+                </div>
+            </div>
+        </div>
+
+        <section class="mb-8">
+            <h3 class="text-lg font-bold mb-4">Fitur Magic AI ✨</h3>
+            <button onclick="alert('Membuka Kamera AI...')" class="w-full bg-green-400 p-6 rounded-2xl genz-card flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white p-3 rounded-xl border-2 border-black">
+                        <i data-lucide="camera" class="w-8 h-8 text-black"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-extrabold text-xl">SCAN NOTA</p>
+                        <p class="text-sm font-semibold text-black/70">Otomatis deteksi barang & harga</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+        </section>
+
+        <section class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-black">Riwayat Supply</h3>
+                <a href="#" class="text-indigo-600 font-bold text-sm underline">Lihat Semua</a>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border-2 border-black mb-4 flex items-center gap-4">
+                <div class="bg-blue-100 p-3 rounded-xl">
+                    <i data-lucide="shopping-bag" class="text-blue-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-bold">Grosir Sembako Jaya</p>
+                    <p class="text-xs text-gray-500 font-semibold">28 Jan 2026 • 5 Barang</p>
+                </div>
+                <p class="font-extrabold text-red-500">-Rp 450rb</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border-2 border-black mb-4 flex items-center gap-4">
+                <div class="bg-purple-100 p-3 rounded-xl">
+                    <i data-lucide="package" class="text-purple-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-bold">Restock Kemasan</p>
+                    <p class="text-xs text-gray-500 font-semibold">27 Jan 2026 • 1 Barang</p>
+                </div>
+                <p class="font-extrabold text-red-500">-Rp 120rb</p>
+            </div>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-4 flex justify-around items-center bottom-nav z-50">
+    <a href="index.html" class="flex flex-col items-center group">
+        <i data-lucide="layout-grid" class="w-6 h-6 transition-colors duration-200"></i>
+        <span class="text-[10px] font-bold mt-1 uppercase transition-colors duration-200">Home</span>
+    </a>
+
+    <a href="statistik.html" class="flex flex-col items-center group">
+        <i data-lucide="bar-chart-3" class="w-6 h-6 transition-colors duration-200"></i>
+        <span class="text-[10px] font-bold mt-1 uppercase transition-colors duration-200">Statistik</span>
+    </a>
+
+    <div class="relative -top-8">
+        <a href="scan.html" class="bg-black text-white p-5 rounded-full border-4 border-white shadow-[0_4px_20px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-transform">
+            <i data-lucide="camera" class="w-8 h-8"></i>
+        </a>
+    </div>
+
+    <a href="stok.html" class="flex flex-col items-center group">
+        <i data-lucide="box" class="w-6 h-6 transition-colors duration-200"></i>
+        <span class="text-[10px] font-bold mt-1 uppercase transition-colors duration-200">Stok</span>
+    </a>
+
+    <a href="setting.html" class="flex flex-col items-center group">
+        <i data-lucide="settings" class="w-6 h-6 transition-colors duration-200"></i>
+        <span class="text-[10px] font-bold mt-1 uppercase transition-colors duration-200">Setting</span>
+    </a>
+</nav>
+
+<script>
+    // Script Tambahan untuk Auto-Highlight Menu Aktif
+    document.querySelectorAll('nav a').forEach(link => {
+        // Cek jika href link sama dengan nama file saat ini
+        if (window.location.pathname.includes(link.getAttribute('href'))) {
+            link.classList.add('text-indigo-600');
+            link.classList.remove('text-gray-400');
+        } else {
+            link.classList.add('text-gray-400');
+        }
+    });
+    
+    // Pastikan Lucide tetap jalan
+    lucide.createIcons();
+</script>
+
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
