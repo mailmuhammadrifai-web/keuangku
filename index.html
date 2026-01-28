@@ -78,27 +78,27 @@
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white p-5 flex justify-around items-center bottom-nav z-50">
-        <a href="index.html" class="flex flex-col items-center text-indigo-600">
-            <i data-lucide="layout-grid" class="w-6 h-6"></i>
-            <span class="text-[9px] font-black mt-1 uppercase">Home</span>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-4 flex justify-around items-center bottom-nav z-50">
+        <a href="index.html" class="flex flex-col items-center group">
+            <i data-lucide="layout-grid" class="w-6 h-6 transition-colors"></i>
+            <span class="text-[10px] font-bold mt-1 uppercase">Home</span>
         </a>
-        <a href="statistik.html" class="flex flex-col items-center text-gray-400">
-            <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
-            <span class="text-[9px] font-black mt-1 uppercase">Statistik</span>
+        <a href="statistik.html" class="flex flex-col items-center group">
+            <i data-lucide="bar-chart-3" class="w-6 h-6 transition-colors"></i>
+            <span class="text-[10px] font-bold mt-1 uppercase">Statistik</span>
         </a>
         <div class="relative -top-8">
-            <a href="scan.html" class="bg-indigo-600 text-white p-5 rounded-full border-4 border-white shadow-[0_4px_20px_rgba(99,102,241,0.4)] flex items-center justify-center active:scale-90 transition-all">
-                <i data-lucide="camera" class="w-7 h-7"></i>
+            <a href="scan.html" class="bg-black text-white p-5 rounded-full border-4 border-white shadow-[0_4px_20px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-transform">
+                <i data-lucide="camera" class="w-8 h-8"></i>
             </a>
         </div>
-        <a href="stok.html" class="flex flex-col items-center text-gray-400">
-            <i data-lucide="box" class="w-6 h-6"></i>
-            <span class="text-[9px] font-black mt-1 uppercase">Stok</span>
+        <a href="stok.html" class="flex flex-col items-center group">
+            <i data-lucide="box" class="w-6 h-6 transition-colors"></i>
+            <span class="text-[10px] font-bold mt-1 uppercase">Stok</span>
         </a>
-        <a href="setting.html" class="flex flex-col items-center text-gray-400">
-            <i data-lucide="settings" class="w-6 h-6"></i>
-            <span class="text-[9px] font-black mt-1 uppercase">Setting</span>
+        <a href="setting.html" class="flex flex-col items-center group">
+            <i data-lucide="settings" class="w-6 h-6 transition-colors"></i>
+            <span class="text-[10px] font-bold mt-1 uppercase">Setting</span>
         </a>
     </nav>
 
@@ -159,6 +159,17 @@
 
         // Jalankan saat halaman dibuka
         window.onload = renderDashboard;
+    lucide.createIcons();
+
+        // Highlight active nav
+        document.querySelectorAll('nav a').forEach(link => {
+            if (window.location.pathname.includes(link.getAttribute('href'))) {
+                link.classList.add('text-indigo-600');
+                link.classList.remove('text-gray-400');
+            } else {
+                link.classList.add('text-gray-400');
+            }
+        });
     </script>
 </body>
 </html>
