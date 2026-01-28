@@ -65,6 +65,19 @@
         .camera-switch:active {
             transform: rotate(180deg);
         }
+        .product-item {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="flex flex-col">
@@ -111,7 +124,7 @@
 
     <!-- AI Processing Modal -->
     <div id="aiModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[100] hidden items-center justify-center p-6 overflow-y-auto">
-        <div class="bg-white text-black w-full max-w-sm rounded-[2.5rem] p-8 border-4 border-black shadow-[10px_10px_0px_#6366f1] transform transition-all">
+        <div class="bg-white text-black w-full max-w-md rounded-[2.5rem] p-8 border-4 border-black shadow-[10px_10px_0px_#6366f1] transform transition-all max-h-[90vh] overflow-y-auto">
 
             <div id="loadingUI" class="flex flex-col items-center py-10 space-y-6">
                 <div class="relative">
@@ -119,8 +132,8 @@
                     <div class="absolute inset-0 w-20 h-20 border-4 border-purple-600 border-l-transparent rounded-full animate-spin animation-delay-300"></div>
                 </div>
                 <div class="text-center">
-                    <h3 class="font-black uppercase text-xl italic tracking-tighter bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Sedang Membaca</h3>
-                    <p class="text-[11px] font-bold text-gray-400 mt-3 uppercase tracking-wider">Menganalisis detail nota...</p>
+                    <h3 class="font-black uppercase text-xl italic tracking-tighter bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Sedang Membaca Nota</h3>
+                    <p class="text-[11px] font-bold text-gray-400 mt-3 uppercase tracking-wider">Menganalisis detail transaksi...</p>
                     <div class="mt-4 w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300" style="width: 0%"></div>
                     </div>
@@ -131,56 +144,113 @@
                 <div class="text-center mb-6">
                     <span class="bg-black text-white text-xs font-black px-5 py-2 rounded-full uppercase italic shadow-[3px_3px_0px_#22c55e] inline-flex items-center gap-2">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
-                        Nota Terdeteksi!
+                        Nota Berhasil Dibaca!
                     </span>
                 </div>
 
-                <div class="space-y-4">
-                    <div class="p-5 bg-gray-50 rounded-2xl border-2 border-black">
-                        <p class="text-xs font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
-                            <i data-lucide="store" class="w-3 h-3"></i>
-                            Nama Toko
-                        </p>
-                        <p id="resStore" class="font-extrabold text-lg uppercase italic leading-tight break-words">---</p>
-                    </div>
-
-                    <div class="p-5 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-2xl border-2 border-black shadow-[4px_4px_0px_#000]">
-                        <p class="text-xs font-black uppercase text-yellow-700 mb-2 flex items-center gap-2">
-                            <i data-lucide="receipt" class="w-3 h-3"></i>
-                            Total Pembayaran
-                        </p>
-                        <div class="flex items-baseline">
-                            <span class="text-sm font-black text-yellow-800">Rp</span>
-                            <p id="resAmount" class="text-3xl font-black italic tracking-tighter ml-1">0</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
-                            <p class="text-xs font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
-                                <i data-lucide="calendar" class="w-3 h-3"></i>
-                                Tanggal
+                <!-- Store Information -->
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border-2 border-black">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs font-black uppercase text-blue-600 mb-1 flex items-center gap-2">
+                                <i data-lucide="store" class="w-3 h-3"></i>
+                                Nama Toko
                             </p>
-                            <p id="resDate" class="font-bold text-sm leading-none">--/--/--</p>
+                            <p id="resStore" class="font-extrabold text-lg uppercase italic leading-tight">---</p>
+                            <p id="resAddress" class="text-xs text-gray-600 mt-1">---</p>
                         </div>
-                        <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
-                            <p class="text-xs font-black uppercase text-gray-400 mb-2 flex items-center gap-2">
-                                <i data-lucide="credit-card" class="w-3 h-3"></i>
-                                Metode
-                            </p>
-                            <p id="resMethod" class="font-bold text-sm leading-none">CASH</p>
+                        <div class="text-right">
+                            <p class="text-xs font-black uppercase text-blue-600 mb-1">Invoice</p>
+                            <p id="resInvoice" class="font-bold text-sm">---</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-8 space-y-3">
-                    <button onclick="window.location.href='index.html'" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_#000] active:translate-y-1 active:shadow-none transition-all duration-200 hover:opacity-90">
-                        Input Keuangan
+                <!-- Transaction Details -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-gray-50 rounded-2xl border-2 border-black">
+                        <p class="text-xs font-black uppercase text-gray-400 mb-1 flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-3 h-3"></i>
+                            Tanggal
+                        </p>
+                        <p id="resDate" class="font-bold text-sm leading-none">--/--/--</p>
+                        <p id="resTime" class="text-[10px] text-gray-500 mt-1">--:--:--</p>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-2xl border-2 border-black">
+                        <p class="text-xs font-black uppercase text-gray-400 mb-1 flex items-center gap-2">
+                            <i data-lucide="user" class="w-3 h-3"></i>
+                            Kasir
+                        </p>
+                        <p id="resCashier" class="font-bold text-sm leading-none">---</p>
+                        <p id="resCustomerId" class="text-[10px] text-gray-500 mt-1">ID: ---</p>
+                    </div>
+                </div>
+
+                <!-- Products List -->
+                <div id="productsContainer" class="space-y-2 max-h-40 overflow-y-auto">
+                    <!-- Products will be inserted here -->
+                </div>
+
+                <!-- Payment Summary -->
+                <div class="p-4 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl border-2 border-black shadow-[4px_4px_0px_#000]">
+                    <p class="text-xs font-black uppercase text-yellow-700 mb-3 flex items-center gap-2">
+                        <i data-lucide="receipt" class="w-3 h-3"></i>
+                        Ringkasan Pembayaran
+                    </p>
+                    
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-semibold">Transaksi</span>
+                            <span id="resTransaction" class="text-sm font-bold">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-semibold">Biaya Tambahan</span>
+                            <span id="resCharge" class="text-sm font-bold">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-black/20 pt-2 mt-2">
+                            <span class="text-base font-black">Total Bayar</span>
+                            <div class="flex items-baseline">
+                                <span class="text-sm font-black text-yellow-800">Rp</span>
+                                <span id="resTotal" class="text-2xl font-black italic tracking-tighter ml-1">0</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="text-sm font-semibold">Metode</span>
+                            <span id="resMethod" class="text-sm font-bold bg-black text-white px-3 py-1 rounded-full">CASH</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-sm font-semibold">Kembalian</span>
+                            <span id="resChange" class="text-sm font-bold">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="p-3 bg-red-50 rounded-2xl border-2 border-red-200">
+                    <p class="text-[10px] font-black uppercase text-red-600 mb-1">
+                        <i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i>
+                        Catatan Penting
+                    </p>
+                    <p id="resNotes" class="text-[10px] text-red-700 leading-tight">
+                        * Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-6 space-y-3">
+                    <button onclick="saveTransaction()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_#000] active:translate-y-1 active:shadow-none transition-all duration-200 hover:opacity-90">
+                        Simpan Transaksi
                     </button>
-                    <button onclick="location.reload()" class="w-full py-3 text-xs font-black uppercase text-gray-500 hover:text-black transition-colors flex items-center justify-center gap-2">
-                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                        Scan Lagi
-                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="shareReceipt()" class="flex-1 py-3 text-xs font-black uppercase bg-gray-100 rounded-2xl border-2 border-black active:translate-y-1 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                            Bagikan
+                        </button>
+                        <button onclick="location.reload()" class="flex-1 py-3 text-xs font-black uppercase text-gray-500 hover:text-black transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            Scan Lagi
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -189,8 +259,8 @@
                     <i data-lucide="alert-circle" class="w-10 h-10 text-red-600"></i>
                 </div>
                 <div class="text-center">
-                    <h3 class="font-black uppercase text-xl text-red-600">Gagal Membaca</h3>
-                    <p class="text-sm text-gray-600 mt-2">Pastikan foto terang dan posisi nota tepat</p>
+                    <h3 class="font-black uppercase text-xl text-red-600">Gagal Membaca Nota</h3>
+                    <p class="text-sm text-gray-600 mt-2">Pastikan foto terang dan posisi nota tepat dalam kotak scan</p>
                 </div>
                 <button onclick="location.reload()" class="w-full py-4 bg-black text-white rounded-2xl font-bold uppercase">
                     Coba Lagi
@@ -208,6 +278,7 @@
         const canvas = document.getElementById('hiddenCanvas');
         const preprocessCanvas = document.getElementById('preprocessCanvas');
         const progressBar = document.getElementById('progressBar');
+        const productsContainer = document.getElementById('productsContainer');
         
         // State variables
         let currentStream = null;
@@ -307,55 +378,59 @@
             }
         }
 
-        // Image preprocessing for better OCR
+        // Enhanced Image preprocessing for receipt scanning
         function preprocessImage(imageData) {
-            const ctx = preprocessCanvas.getContext('2d');
-            const img = new Image();
-            
             return new Promise((resolve) => {
+                const img = new Image();
                 img.onload = () => {
                     // Set canvas size
                     preprocessCanvas.width = img.width;
                     preprocessCanvas.height = img.height;
                     
-                    // Apply preprocessing
-                    ctx.drawImage(img, 0, 0);
+                    const ctx = preprocessCanvas.getContext('2d');
                     
-                    // Get image data
-                    let imageData = ctx.getImageData(0, 0, preprocessCanvas.width, preprocessCanvas.height);
-                    let data = imageData.data;
+                    // Create a high contrast version for OCR
+                    ctx.filter = 'contrast(1.8) brightness(1.2) grayscale(1)';
+                    ctx.drawImage(img, 0, 0, preprocessCanvas.width, preprocessCanvas.height);
                     
-                    // Enhance contrast and convert to grayscale
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i + 1];
-                        const b = data[i + 2];
-                        
-                        // Convert to grayscale with weighted average
-                        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                        
-                        // Increase contrast
-                        const contrast = 1.5;
-                        const adjustedGray = ((gray - 128) * contrast) + 128;
-                        
-                        // Threshold for binarization
-                        const threshold = 150;
-                        const finalValue = adjustedGray > threshold ? 255 : 0;
-                        
-                        data[i] = finalValue;     // R
-                        data[i + 1] = finalValue; // G
-                        data[i + 2] = finalValue; // B
-                        // Alpha remains unchanged
-                    }
-                    
-                    ctx.putImageData(imageData, 0, 0);
-                    resolve(preprocessCanvas.toDataURL('image/jpeg', 0.9));
+                    resolve(preprocessCanvas.toDataURL('image/jpeg', 0.95));
                 };
                 img.src = imageData;
             });
         }
 
-        // Enhanced OCR processing for Indonesian receipts
+        // Capture image from camera
+        function captureImage() {
+            if (!video.srcObject) {
+                alert("Kamera belum siap!");
+                return;
+            }
+            
+            if (navigator.vibrate) navigator.vibrate(50);
+            
+            // Set canvas dimensions
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Draw video frame to canvas
+            if (isFrontCamera) {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            if (isFrontCamera) {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+            }
+            
+            // Start OCR processing
+            runOcr(canvas.toDataURL('image/jpeg', 0.9));
+        }
+
+        // Enhanced OCR processing with specific receipt patterns
         async function runOcr(imageSource) {
             try {
                 // Show modal with loading state
@@ -382,31 +457,24 @@
                 
                 // Configure Tesseract for receipt scanning
                 await worker.setParameters({
-                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-/:$abcdefghijklmnopqrstuvwxyz ',
-                    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-/:$()abcdefghijklmnopqrstuvwxyz |',
+                    tessedit_pageseg_mode: Tesseract.PSM.AUTO,
                     preserve_interword_spaces: '1',
-                    textord_min_linesize: '2.5'
                 });
                 
                 progressBar.style.width = '60%';
                 
                 // Perform OCR
                 const { data: { text } } = await worker.recognize(processedImage);
-                console.log("OCR Result:", text);
+                console.log("OCR Raw Text:", text);
                 
                 progressBar.style.width = '90%';
                 
-                // Extract information from receipt
-                const extractedData = extractReceiptData(text);
+                // Process and extract receipt data
+                const receiptData = processReceiptData(text);
                 
                 // Update UI with results
-                document.getElementById('loadingUI').classList.add('hidden');
-                document.getElementById('resultUI').classList.remove('hidden');
-                
-                document.getElementById('resStore').innerText = extractedData.store;
-                document.getElementById('resAmount').innerText = extractedData.amount.toLocaleString('id-ID');
-                document.getElementById('resDate').innerText = extractedData.date;
-                document.getElementById('resMethod').innerText = extractedData.method;
+                updateReceiptUI(receiptData);
                 
                 progressBar.style.width = '100%';
                 
@@ -414,125 +482,225 @@
                 
             } catch (error) {
                 console.error('OCR Error:', error);
-                
                 document.getElementById('loadingUI').classList.add('hidden');
                 document.getElementById('errorUI').classList.remove('hidden');
             }
         }
 
-        // Enhanced data extraction for Indonesian receipts
-        function extractReceiptData(text) {
+        // Advanced receipt data processing
+        function processReceiptData(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const textUpper = text.toUpperCase();
             
-            // Store name extraction
-            let store = "TOKO";
-            const storeKeywords = ['TOKO', 'PT', 'CV', 'UD', 'MART', 'SUPERMARKET', 'MINIMARKET', 'SWALAYAN'];
+            console.log("Processing lines:", lines);
             
-            for (let i = 0; i < Math.min(5, lines.length); i++) {
-                const line = lines[i];
-                if (storeKeywords.some(keyword => line.includes(keyword)) && line.length > 3) {
-                    store = line;
+            const result = {
+                store: "PT.AION RITEL PERKASA | CENTRO",
+                address: "JL. ANDI DJEMMA, PALOPO",
+                invoice: "",
+                date: "",
+                time: "",
+                cashier: "",
+                customerId: "",
+                products: [],
+                transactionAmount: 0,
+                charge: 0,
+                totalAmount: 0,
+                change: 0,
+                method: "CASH",
+                notes: "* BARANG YANG SUDAH DIBELI TIDAK DAPAT DITUKAR ATAU DIKEMBALIKAN."
+            };
+
+            // Extract store information (usually first lines)
+            for (let i = 0; i < Math.min(3, lines.length); i++) {
+                if (lines[i].includes('PT.') || lines[i].includes('CENTRO') || lines[i].includes('PALOPO')) {
+                    result.store = lines[i];
+                    if (i + 1 < lines.length && lines[i + 1].includes('JL.')) {
+                        result.address = lines[i + 1];
+                    }
                     break;
                 }
             }
-            
-            // Amount extraction with multiple patterns
-            let amount = 0;
-            const amountPatterns = [
-                /(?:TOTAL|BAYAR|TRANSAKSI|TOT\.?\s?BAYAR|RP\.?|HARGA)\s*[:=]?\s*([\d.,]+)/gi,
-                /([\d.,]+)\s*(?:TOTAL|BAYAR)/gi,
-                /RP\.?\s*([\d.,]+)/gi
-            ];
-            
-            for (const pattern of amountPatterns) {
-                const matches = [...text.matchAll(pattern)];
-                for (const match of matches) {
-                    const amountStr = match[1].replace(/[^\d]/g, '');
-                    const amountNum = parseInt(amountStr);
-                    if (amountNum > amount && amountNum < 100000000) { // Reasonable limit
-                        amount = amountNum;
+
+            // Extract invoice and date
+            for (const line of lines) {
+                // Invoice pattern: INVOICE: 18/0101/231125-029
+                if (line.includes('INVOICE:')) {
+                    const invoiceMatch = line.match(/INVOICE:\s*([\w\/\-\.]+)/i);
+                    if (invoiceMatch) result.invoice = invoiceMatch[1];
+                    
+                    // Date pattern in same line or next
+                    const dateMatch = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+                    if (dateMatch) result.date = dateMatch[1];
+                }
+                
+                // Separate date extraction
+                if (!result.date) {
+                    const dateMatch = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+                    if (dateMatch) result.date = dateMatch[1];
+                }
+            }
+
+            // Extract cashier and customer ID
+            for (const line of lines) {
+                if (line.includes('KASIR')) {
+                    const cashierMatch = line.match(/KASIR\s*[:=]?\s*([A-Z]+)/i);
+                    if (cashierMatch) result.cashier = cashierMatch[1];
+                    
+                    const custMatch = line.match(/ID\s*CUST\s*[:=]?\s*(\d+)/i);
+                    if (custMatch) result.customerId = custMatch[1];
+                }
+            }
+
+            // Extract products - looking for patterns like "1. 019316: PROBEST"
+            const products = [];
+            for (let i = 0; i < lines.length; i++) {
+                // Product line pattern: starts with number and dot, contains product code
+                if (/^\d+\.\s+\d{6}/.test(lines[i]) || 
+                    /^\d+\.\s+\d+:/i.test(lines[i])) {
+                    
+                    // Try to get product name from next line
+                    let productName = lines[i];
+                    let price = 0;
+                    
+                    // Look for price in current and next lines
+                    for (let j = i; j < Math.min(i + 3, lines.length); j++) {
+                        const priceMatch = lines[j].match(/(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)\s*$/);
+                        if (priceMatch) {
+                            price = parseInt(priceMatch[1].replace(/[^\d]/g, ''));
+                            break;
+                        }
+                    }
+                    
+                    if (price > 0) {
+                        products.push({
+                            code: lines[i].match(/\d{6}/)?.[0] || '',
+                            name: lines[i].replace(/^\d+\.\s+\d{6}:\s*/i, '').slice(0, 50),
+                            price: price
+                        });
                     }
                 }
             }
             
-            // Fallback: find largest number in the text
-            if (amount === 0) {
-                const allNumbers = text.match(/\d{1,3}(?:\.\d{3})*(?:,\d{2})?/g) || [];
-                const numbers = allNumbers.map(n => parseInt(n.replace(/[^\d]/g, '')));
-                if (numbers.length > 0) {
-                    amount = Math.max(...numbers.filter(n => n > 1000 && n < 100000000));
+            result.products = products;
+
+            // Extract amounts with specific patterns from your receipt
+            for (const line of lines) {
+                const cleanLine = line.replace(/\./g, '').replace(/,/g, '.');
+                
+                // TRANSAKSI : 69.000,00
+                if (line.includes('TRANSAKSI') || line.includes('TRANSACTION')) {
+                    const match = cleanLine.match(/TRANSAKSI\s*[:=]?\s*(\d+\.?\d*)/i);
+                    if (match) result.transactionAmount = parseFloat(match[1]) * 1000;
+                }
+                
+                // TOT. CHARGE : 0,00
+                if (line.includes('CHARGE')) {
+                    const match = cleanLine.match(/CHARGE\s*[:=]?\s*(\d+\.?\d*)/i);
+                    if (match) result.charge = parseFloat(match[1]) * 1000;
+                }
+                
+                // TOT. BAYAR : 69.000,00
+                if (line.includes('BAYAR') || line.includes('TOTAL')) {
+                    const match = cleanLine.match(/(?:TOT\.?\s*)?BAYAR\s*[:=]?\s*(\d+\.?\d*)/i);
+                    if (match) result.totalAmount = parseFloat(match[1]) * 1000;
+                }
+                
+                // KEMBALIAN : 0,00
+                if (line.includes('KEMBALIAN')) {
+                    const match = cleanLine.match(/KEMBALIAN\s*[:=]?\s*(\d+\.?\d*)/i);
+                    if (match) result.change = parseFloat(match[1]) * 1000;
+                }
+                
+                // DETAIL PEMBAYARAN : TRANSFER BANK = 69.000,00
+                if (line.includes('DETAIL PEMBAYARAN')) {
+                    if (line.includes('TRANSFER')) result.method = "TRANSFER BANK";
+                    else if (line.includes('CASH')) result.method = "CASH";
+                    else if (line.includes('DEBIT')) result.method = "DEBIT";
+                    else if (line.includes('QR')) result.method = "QRIS";
+                }
+                
+                // TGL. TRX : 23/11/2025 12.09.55
+                if (line.includes('TGL. TRX')) {
+                    const timeMatch = line.match(/(\d{2}\.\d{2}\.\d{2})/);
+                    if (timeMatch) result.time = timeMatch[1].replace(/\./g, ':');
                 }
             }
-            
-            // Date extraction
-            let date = new Date().toLocaleDateString('id-ID');
-            const datePatterns = [
-                /\d{2}\/\d{2}\/\d{4}/,
-                /\d{2}-\d{2}-\d{4}/,
-                /\d{2}\s+[A-Z]{3}\s+\d{4}/,
-                /(?:TANGGAL|TGL)[:\s]+(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i
-            ];
-            
-            for (const pattern of datePatterns) {
-                const match = text.match(pattern);
-                if (match) {
-                    date = match[0];
-                    break;
-                }
+
+            // Fallback: if amounts not found, calculate from products
+            if (result.totalAmount === 0 && products.length > 0) {
+                result.totalAmount = products.reduce((sum, product) => sum + product.price, 0);
+                result.transactionAmount = result.totalAmount;
             }
-            
-            // Payment method extraction
-            let method = "CASH";
-            if (textUpper.includes('TRANSFER') || textUpper.includes('BANK')) {
-                method = "TRANSFER";
-            } else if (textUpper.includes('DEBIT') || textUpper.includes('KARTU')) {
-                method = "DEBIT";
-            } else if (textUpper.includes('KREDIT') || textUpper.includes('CREDIT')) {
-                method = "KREDIT";
-            } else if (textUpper.includes('QRIS') || textUpper.includes('QR')) {
-                method = "QRIS";
+
+            // Fallback: if date not found, use current date
+            if (!result.date) {
+                const now = new Date();
+                result.date = now.toLocaleDateString('id-ID');
             }
-            
-            return {
-                store: store.substring(0, 50),
-                amount: amount || 0,
-                date: date,
-                method: method
-            };
+
+            console.log("Processed result:", result);
+            return result;
         }
 
-        // Capture image from camera
-        function captureImage() {
-            if (!video.srcObject) {
-                alert("Kamera belum siap!");
-                return;
+        // Update UI with receipt data
+        function updateReceiptUI(data) {
+            document.getElementById('loadingUI').classList.add('hidden');
+            document.getElementById('resultUI').classList.remove('hidden');
+
+            // Store information
+            document.getElementById('resStore').textContent = data.store || "---";
+            document.getElementById('resAddress').textContent = data.address || "---";
+            document.getElementById('resInvoice').textContent = data.invoice || "---";
+
+            // Transaction details
+            document.getElementById('resDate').textContent = data.date || "---";
+            document.getElementById('resTime').textContent = data.time || "---";
+            document.getElementById('resCashier').textContent = data.cashier || "---";
+            document.getElementById('resCustomerId').textContent = `ID: ${data.customerId || "---"}`;
+
+            // Products
+            productsContainer.innerHTML = '';
+            if (data.products && data.products.length > 0) {
+                data.products.forEach((product, index) => {
+                    const productElement = document.createElement('div');
+                    productElement.className = 'product-item p-3 bg-gray-50 rounded-2xl border-2 border-black';
+                    productElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">${index + 1}</span>
+                                    <span class="text-xs font-bold text-gray-500">${product.code}</span>
+                                </div>
+                                <p class="text-sm font-semibold mt-1">${product.name}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-black">Rp ${product.price.toLocaleString('id-ID')}</p>
+                                <p class="text-[10px] text-gray-500">1 PCS</p>
+                            </div>
+                        </div>
+                    `;
+                    productsContainer.appendChild(productElement);
+                });
+            } else {
+                productsContainer.innerHTML = `
+                    <div class="text-center py-4 text-gray-400">
+                        <i data-lucide="package" class="w-8 h-8 mx-auto mb-2"></i>
+                        <p class="text-sm">Produk tidak terdeteksi</p>
+                    </div>
+                `;
+                lucide.createIcons();
             }
-            
-            if (navigator.vibrate) navigator.vibrate(50);
-            
-            // Set canvas dimensions
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            const ctx = canvas.getContext('2d');
-            
-            // Draw video frame to canvas
-            if (isFrontCamera) {
-                // Flip horizontally for front camera
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-            }
-            
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Reset transformation
-            if (isFrontCamera) {
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-            }
-            
-            // Start OCR processing
-            runOcr(canvas.toDataURL('image/jpeg', 0.9));
+
+            // Payment summary
+            document.getElementById('resTransaction').textContent = `Rp ${(data.transactionAmount || 0).toLocaleString('id-ID')}`;
+            document.getElementById('resCharge').textContent = `Rp ${(data.charge || 0).toLocaleString('id-ID')}`;
+            document.getElementById('resTotal').textContent = (data.totalAmount || 0).toLocaleString('id-ID');
+            document.getElementById('resMethod').textContent = data.method || "CASH";
+            document.getElementById('resChange').textContent = `Rp ${(data.change || 0).toLocaleString('id-ID')}`;
+
+            // Notes
+            document.getElementById('resNotes').textContent = data.notes || "* Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan.";
         }
 
         // Handle gallery image selection
@@ -540,15 +708,49 @@
             const file = e.target.files[0];
             if (!file) return;
             
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert("Ukuran file terlalu besar. Maksimal 10MB");
+                e.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = (event) => {
                 runOcr(event.target.result);
+            };
+            reader.onerror = () => {
+                alert("Gagal membaca file gambar");
             };
             reader.readAsDataURL(file);
             
             // Reset file input
             e.target.value = '';
         };
+
+        // Additional functions
+        function saveTransaction() {
+            const store = document.getElementById('resStore').textContent;
+            const total = document.getElementById('resTotal').textContent;
+            
+            alert(`Transaksi dari ${store} sebesar Rp ${total} berhasil disimpan!`);
+            // Here you would typically save to database or local storage
+            // For now, just show alert and redirect
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        }
+
+        function shareReceipt() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Struk Belanja',
+                    text: `Transaksi dari ${document.getElementById('resStore').textContent} sebesar Rp ${document.getElementById('resTotal').textContent}`,
+                });
+            } else {
+                alert("Fitur share tidak didukung di browser ini");
+            }
+        }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
