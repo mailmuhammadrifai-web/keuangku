@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Keuangku - AI Scanner Ultra</title>
+    <title>Keuangku AI - Pro Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -11,11 +11,21 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #000; color: white; height: 100dvh; overflow: hidden; }
         #videoFeed { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
-        .mask { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,0.6); clip-path: polygon(0% 0%, 0% 100%, 10% 100%, 10% 20%, 90% 20%, 90% 80%, 10% 80%, 10% 100%, 100% 100%, 100% 0%); }
-        .scanner-line { position: absolute; top: 20%; left: 10%; width: 80%; height: 4px; background: #22c55e; box-shadow: 0 0 20px #22c55e; z-index: 30; animation: scan 3s infinite ease-in-out; }
-        @keyframes scan { 0%, 100% { top: 20%; opacity: 0.3; } 50% { top: 80%; opacity: 1; } }
-        .genz-btn { border: 2px solid #000; box-shadow: 4px 4px 0px #000; transition: all 0.1s; }
-        .genz-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #000; }
+        
+        /* Scanner Overlay */
+        .viewfinder-mask {
+            position: fixed; inset: 0; z-index: 20;
+            background: rgba(0,0,0,0.6);
+            clip-path: polygon(0% 0%, 0% 100%, 5% 100%, 5% 15%, 95% 15%, 95% 75%, 5% 75%, 5% 100%, 100% 100%, 100% 0%);
+        }
+        .scanner-line {
+            position: absolute; top: 15%; left: 5%; width: 90%; height: 4px;
+            background: #22c55e; box-shadow: 0 0 15px #22c55e;
+            z-index: 30; animation: scan 2.5s infinite ease-in-out;
+        }
+        @keyframes scan { 0%, 100% { top: 15%; } 50% { top: 75%; } }
+        
+        .result-card { border: 3px solid #000; box-shadow: 8px 8px 0px #000; }
     </style>
 </head>
 <body class="flex flex-col">
@@ -23,59 +33,72 @@
     <video id="videoFeed" autoplay playsinline muted></video>
     <canvas id="hiddenCanvas" class="hidden"></canvas>
     
-    <div class="mask"></div>
+    <div class="viewfinder-mask"></div>
     <div class="scanner-line"></div>
 
     <header class="fixed top-0 w-full p-6 flex justify-between items-center z-50">
-        <a href="index.html" class="bg-white p-3 rounded-2xl border-2 border-black text-black active:scale-90 transition-all shadow-[4px_4px_0px_#000]">
-            <i data-lucide="arrow-left" class="w-6 h-6"></i>
+        <a href="index.html" class="bg-white p-3 rounded-2xl border-2 border-black text-black shadow-[4px_4px_0px_#000] active:scale-90 transition-all">
+            <i data-lucide="arrow-left"></i>
         </a>
-        <div class="bg-indigo-600 px-4 py-2 rounded-full border-2 border-black flex items-center gap-2 shadow-[4px_4px_0px_#000]">
-            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            <span class="text-[10px] font-black uppercase tracking-widest">AI Vision 2.0</span>
-        </div>
+        <button id="flashToggle" class="bg-black/50 backdrop-blur-md p-3 rounded-2xl border-2 border-white/20 text-yellow-400 active:scale-90">
+            <i data-lucide="zap-off" id="flashIcon"></i>
+        </button>
     </header>
 
-    <section class="fixed bottom-0 w-full bg-black/80 backdrop-blur-md p-8 pb-12 flex justify-around items-center z-50 border-t-4 border-white/10 rounded-t-[3rem]">
-        <label class="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition-all text-white/60">
+    <section class="fixed bottom-0 w-full bg-black/80 backdrop-blur-lg p-8 pb-12 flex justify-around items-center z-50 border-t-4 border-white/10 rounded-t-[3rem]">
+        <label class="flex flex-col items-center gap-2 cursor-pointer text-white/60">
             <input type="file" id="galleryInput" accept="image/*" class="hidden">
             <div class="p-4 bg-white/10 rounded-full border border-white/20"><i data-lucide="image"></i></div>
             <span class="text-[10px] font-bold uppercase">Galeri</span>
         </label>
 
-        <button onclick="captureImage()" class="relative group">
+        <button onclick="captureAndProcess()" class="relative group">
             <div class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center p-1">
                 <div class="w-full h-full rounded-full bg-white border-4 border-black group-active:bg-gray-300"></div>
             </div>
         </button>
 
-        <button onclick="toggleCamera()" class="flex flex-col items-center gap-2 text-white/60 active:scale-90 transition-all">
+        <button onclick="switchCamera()" class="flex flex-col items-center gap-2 text-white/60">
             <div class="p-4 bg-white/10 rounded-full border border-white/20"><i data-lucide="refresh-cw"></i></div>
             <span class="text-[10px] font-bold uppercase">Putar</span>
         </button>
     </section>
 
-    <div id="aiModal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
-        <div class="bg-white text-black w-full rounded-[2.5rem] p-8 border-4 border-black shadow-[10px_10px_0px_#6366f1]">
-            <div id="loader" class="flex flex-col items-center text-center">
-                <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <h3 class="text-xl font-black uppercase italic italic">AI Lagi Mikir...</h3>
-                <p class="text-xs font-bold text-gray-400 mt-2 uppercase">Membaca nominal nota kamu</p>
+    <div id="aiModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[100] hidden items-center justify-center p-6 overflow-y-auto">
+        <div class="bg-white text-black w-full max-w-sm rounded-[2.5rem] p-8 border-4 border-black shadow-[10px_10px_0px_#6366f1]">
+            
+            <div id="loadingUI" class="flex flex-col items-center py-10">
+                <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <h3 class="mt-6 font-black uppercase italic italic text-xl">AI Menganalisis Detail...</h3>
+                <p class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest">Membaca Nama Toko & Total</p>
             </div>
 
-            <div id="result" class="hidden space-y-5">
-                <div class="text-center">
-                    <div class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-green-500 mb-2">Scan Berhasil ✨</div>
-                    <h3 class="text-3xl font-black italic uppercase tracking-tighter" id="detectedAmount">Rp 0</h3>
-                </div>
-                
-                <div class="bg-gray-100 p-4 rounded-2xl border-2 border-black">
-                    <p class="text-[10px] font-black uppercase opacity-40 mb-1">Teks Mentah Terdeteksi:</p>
-                    <p id="rawText" class="text-[10px] font-bold h-20 overflow-y-auto leading-tight italic"></p>
+            <div id="resultUI" class="hidden space-y-4">
+                <div class="text-center mb-6">
+                    <span class="bg-green-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Nota Terverifikasi AI</span>
                 </div>
 
-                <button onclick="window.location.href='index.html'" class="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest genz-btn">Simpan ke Laporan</button>
-                <button onclick="location.reload()" class="w-full text-xs font-bold uppercase underline text-gray-500">Coba Scan Lagi</button>
+                <div class="space-y-3">
+                    <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
+                        <p class="text-[10px] font-black uppercase text-gray-400">Nama Toko/Merchant</p>
+                        <p id="resStore" class="font-extrabold text-lg uppercase leading-tight italic">Mencari...</p>
+                    </div>
+
+                    <div class="p-4 bg-indigo-50 rounded-2xl border-2 border-black">
+                        <p class="text-[10px] font-black uppercase text-indigo-400">Total Transaksi</p>
+                        <p id="resAmount" class="text-3xl font-black italic">Rp 0</p>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-2xl border-2 border-black">
+                        <p class="text-[10px] font-black uppercase text-gray-400">Tanggal Deteksi</p>
+                        <p id="resDate" class="font-bold text-sm">--/--/----</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 space-y-3">
+                    <button onclick="window.location.href='index.html'" class="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest active:translate-y-1 transition-all border-b-4 border-indigo-600">Simpan Keuangan</button>
+                    <button onclick="location.reload()" class="w-full py-2 text-xs font-black uppercase text-gray-400 italic">Scan Ulang</button>
+                </div>
             </div>
         </div>
     </div>
@@ -84,65 +107,82 @@
         lucide.createIcons();
         const video = document.getElementById('videoFeed');
         const canvas = document.getElementById('hiddenCanvas');
-        let currentMode = 'environment';
+        let currentStream;
+        let isFlashOn = false;
 
-        // 1. Inisialisasi Kamera
-        async function initCam() {
+        // 1. Kamera & Flash Logic
+        async function startCamera(mode = 'environment') {
+            if (currentStream) currentStream.getTracks().forEach(t => t.stop());
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentMode } });
-                video.srcObject = stream;
-            } catch (err) { alert("Aktifkan izin kamera bosku!"); }
+                currentStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: mode, focusMode: 'continuous' } 
+                });
+                video.srcObject = currentStream;
+            } catch (e) { alert("Izin kamera diperlukan!"); }
         }
 
-        function toggleCamera() {
-            currentMode = currentMode === 'environment' ? 'user' : 'environment';
-            initCam();
-        }
-
-        // 2. Logika Deteksi Nota (OCR)
-        async function runAI(imgSource) {
-            document.getElementById('aiModal').classList.replace('hidden', 'flex');
-            
-            try {
-                const worker = await Tesseract.createWorker('ind');
-                const { data: { text } } = await worker.recognize(imgSource);
-                
-                // Regex cerdas untuk mencari angka terbesar (asumsi itu total harga)
-                const numbers = text.replace(/[,.]/g, '').match(/\d{4,}/g); 
-                let total = numbers ? Math.max(...numbers.map(Number)) : 0;
-                
-                // Formatting Rupiah
-                const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
-
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('result').classList.remove('hidden');
-                document.getElementById('detectedAmount').innerText = formatted;
-                document.getElementById('rawText').innerText = text;
-                
-                await worker.terminate();
-            } catch (e) {
-                alert("AI lagi capek, coba foto lebih jelas ya!");
-                location.reload();
+        document.getElementById('flashToggle').onclick = async () => {
+            const track = currentStream.getVideoTracks()[0];
+            const caps = track.getCapabilities();
+            if (caps.torch) {
+                isFlashOn = !isFlashOn;
+                await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+                document.getElementById('flashIcon').setAttribute('data-lucide', isFlashOn ? 'zap' : 'zap-off');
+                lucide.createIcons();
+            } else {
+                alert("Flash tidak tersedia di perangkat ini");
             }
-        }
-
-        // 3. Tombol Jepret
-        function captureImage() {
-            if (navigator.vibrate) navigator.vibrate(50);
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            runAI(canvas.toDataURL('image/png'));
-        }
-
-        // 4. Input Galeri
-        document.getElementById('galleryInput').onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (f) => runAI(f.target.result);
-            reader.readAsDataURL(e.target.files[0]);
         };
 
-        initCam();
+        // 2. AI Parsing Logic (Mencari Detail)
+        async function analyzeReceipt(image) {
+            document.getElementById('aiModal').classList.replace('hidden', 'flex');
+            try {
+                const worker = await Tesseract.createWorker('ind');
+                const { data: { text } } = await worker.recognize(image);
+                
+                // --- Logika Deteksi Detail ---
+                const lines = text.split('\n').filter(l => l.trim().length > 3);
+                
+                // A. Deteksi Nama Toko (Biasanya di 3 baris pertama)
+                const storeName = lines[0] || "Toko Tidak Terdeteksi";
+
+                // B. Deteksi Total Harga (Regex mencari angka ribuan terbesar)
+                const numbers = text.replace(/[,.]/g, '').match(/\d{4,}/g);
+                const total = numbers ? Math.max(...numbers.map(Number)) : 0;
+
+                // C. Deteksi Tanggal
+                const dateMatch = text.match(/\d{2}[\/-]\d{2}[\/-]\d{2,4}/);
+                const receiptDate = dateMatch ? dateMatch[0] : new Date().toLocaleDateString('id-ID');
+
+                // Tampilkan Hasil
+                document.getElementById('loadingUI').classList.add('hidden');
+                document.getElementById('resultUI').classList.remove('hidden');
+                document.getElementById('resStore').innerText = storeName;
+                document.getElementById('resDate').innerText = receiptDate;
+                document.getElementById('resAmount').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
+
+                await worker.terminate();
+            } catch (e) { alert("AI gagal memproses. Coba lagi!"); location.reload(); }
+        }
+
+        function captureAndProcess() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            // Sedikit tuning gambar agar teks lebih tajam
+            ctx.filter = 'contrast(1.2) grayscale(0.2)';
+            ctx.drawImage(video, 0, 0);
+            analyzeReceipt(canvas.toDataURL('image/jpeg', 0.8));
+        }
+
+        document.getElementById('galleryInput').onchange = (e) => {
+            const r = new FileReader();
+            r.onload = (f) => analyzeReceipt(f.target.result);
+            r.readAsDataURL(e.target.files[0]);
+        };
+
+        startCamera();
     </script>
 </body>
 </html>
